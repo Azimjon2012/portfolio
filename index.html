@@ -12,7 +12,6 @@ body {
   color: white;
 }
 
-/* HEADER */
 header {
   padding: 40px;
   text-align: center;
@@ -25,7 +24,6 @@ header h1 {
   color: transparent;
 }
 
-/* LOGIN / FORM */
 .box {
   text-align: center;
   margin: 20px;
@@ -48,14 +46,8 @@ button {
   background: linear-gradient(90deg, #6366f1, #22d3ee);
   color: white;
   cursor: pointer;
-  transition: 0.3s;
 }
 
-button:hover {
-  transform: scale(1.05);
-}
-
-/* GRID */
 .container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -63,18 +55,11 @@ button:hover {
   padding: 30px;
 }
 
-/* CARD */
 .card {
   background: rgba(30,41,59,0.7);
   backdrop-filter: blur(10px);
   padding: 20px;
   border-radius: 15px;
-  transition: 0.3s;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.card:hover {
-  transform: translateY(-10px);
 }
 </style>
 </head>
@@ -100,52 +85,90 @@ button:hover {
 <div class="container" id="projects"></div>
 
 <script>
+
+// ✅ ВАЖНО: правильный backend URL
+const API = "https://portfolio-beckend-6a0r.onrender.com";
+
 let token = "";
 
+// LOGIN
 async function login() {
-  const res = await fetch("http://localhost:3000/login", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({
-      username: username.value,
-      password: password.value
-    })
-  });
+  try {
+    const res = await fetch(API + "/login", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        username: username.value,
+        password: password.value
+      })
+    });
 
-  const data = await res.json();
-  token = data.token;
-  alert("Logged in");
+    const data = await res.json();
+    console.log("LOGIN RESPONSE:", data);
+
+    if (data.token) {
+      token = data.token;
+      alert("✅ Logged in");
+    } else {
+      alert("❌ Login failed");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Server error");
+  }
 }
 
+// ADD PROJECT
 async function addProject() {
-  await fetch("http://localhost:3000/projects", {
-    method: "POST",
-    headers: {
-      "Content-Type":"application/json",
-      "Authorization": token
-    },
-    body: JSON.stringify({
-      title: title.value,
-      desc: desc.value
-    })
-  });
+  if (!token) {
+    alert("Login first!");
+    return;
+  }
 
-  loadProjects();
+  try {
+    const res = await fetch(API + "/projects", {
+      method: "POST",
+      headers: {
+        "Content-Type":"application/json",
+        "Authorization": token
+      },
+      body: JSON.stringify({
+        title: title.value,
+        desc: desc.value
+      })
+    });
+
+    const data = await res.json();
+    console.log("ADD PROJECT:", data);
+
+    loadProjects();
+
+  } catch (err) {
+    console.error(err);
+  }
 }
 
+// LOAD PROJECTS
 async function loadProjects() {
-  const res = await fetch("http://localhost:3000/projects");
-  const data = await res.json();
+  try {
+    const res = await fetch(API + "/projects");
+    const data = await res.json();
 
-  projects.innerHTML = data.map(p => `
-    <div class="card">
-      <h3>${p.title}</h3>
-      <p>${p.desc}</p>
-    </div>
-  `).join("");
+    projects.innerHTML = data.map(p => `
+      <div class="card">
+        <h3>${p.title}</h3>
+        <p>${p.desc}</p>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 loadProjects();
+
 </script>
 
 </body>
